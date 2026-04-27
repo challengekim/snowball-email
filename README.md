@@ -26,6 +26,8 @@
 **전체 매뉴얼은 [`docs/MANUAL.md`](docs/MANUAL.md) (한국어 + English 동시 수록).**
 **Full bilingual manual: [`docs/MANUAL.md`](docs/MANUAL.md).**
 
+릴리스별 변경점 / Release notes: [`CHANGELOG.md`](CHANGELOG.md) — what works, known gaps, next milestone.
+
 ---
 
 ## Status & Roadmap (v0.1.x → v0.2)
