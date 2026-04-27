@@ -1,4 +1,7 @@
-# Per-inbox runtime state — never share across users
+# Per-user runtime data — never share across users
+inboxes/*/
+!inboxes/.gitkeep
+# (the patterns below are redundant once inboxes/*/ is excluded but kept for clarity)
 inboxes/*/metrics.jsonl
 inboxes/*/bootstrap_state.json
 inboxes/*/reference/_backups/
