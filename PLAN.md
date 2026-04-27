@@ -1,6 +1,19 @@
 # snowball-email — 설계 문서 (Compound Brain Edition)
 
-> **목표**: studypie 전용 사내 스킬(`/support-reply` 원본)을 누구나 쓸 수 있는 공개 스킬 `/snowball-email`로 일반화한다. 첫 사용은 평범하지만, 100회차에는 그 회사의 CS 베테랑처럼 답하는 **복리(compound) 에이전트**.
+> **⚠️ Status banner — 이 문서는 v0.1.x의 사실이 아니라 *설계 목표*입니다.**
+> 본 PLAN은 consensus 통과 시점의 design target이며, v0.1.x 구현 상태와 다릅니다.
+> 무엇이 실제로 작동하고 무엇이 v0.2 마일스톤인지는 다음을 보세요:
+> - [`README.md`](README.md) "Status & Roadmap" 표
+> - [`SKILL.md`](SKILL.md) §1.5
+> - [`CHANGELOG.md`](CHANGELOG.md) v0.1.0 / Unreleased
+> 특히 **drafting 단계의 compound (round-over-round 본문 품질 향상)** 는
+> v0.1.x에서 작동하지 않습니다 — `assets/run_round.py:204` `build_draft()` 가
+> 한국어 고정 템플릿이고 reference / persona principles 를 본문 prompt 에 주입하지
+> 않기 때문입니다. 본 문서 §6.1, §11, §부록 등에서 묘사하는 "100회차 베테랑"
+> 시나리오는 v0.2 milestone (이슈 템플릿 `feat-drafts-reference-injection.md` 참조).
+> §15 (line 732 부근) self-critique 가 이 비대칭을 이미 인정하고 있습니다.
+
+> **목표**: studypie 전용 사내 스킬(`/support-reply` 원본)을 누구나 쓸 수 있는 공개 스킬 `/snowball-email`로 일반화한다. 첫 사용은 평범하지만, 100회차에는 그 회사의 CS 베테랑처럼 답하는 **복리(compound) 에이전트**. *(← v0.2 design target; v0.1.x 상태는 위 status banner 참조)*
 
 ---
 
