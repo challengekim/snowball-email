@@ -1,5 +1,10 @@
 # snowball-email
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-skill-orange)](https://docs.anthropic.com/claude/docs/claude-code)
+[![Gmail via gws CLI](https://img.shields.io/badge/Gmail-gws%20CLI-red)](https://github.com/GAM-team/GAM)
+
 > Gmail 라벨 1개를 받아 회신 초안을 만들고, 매 라운드마다 새 패턴·사례·표현이 reference에 쌓여 **눈덩이처럼 굴릴수록 초안이 좋아지는** 이메일 스킬. CS·BD·recruiting·partnerships·sales 모두 동일한 루프로 사용 가능.
 >
 > Compound-learning email skill — every reply feeds the reference, so drafts snowball in quality round over round. Works for CS, BD outreach, recruiting, partnerships, and sales.
