@@ -57,8 +57,8 @@ bin/snowball-email run --inbox myinbox
 ```bash
 # 4개 소스 모두 dry-run 지원
 bin/snowball-email bootstrap --inbox myinbox web --urls https://yourco.com/faq
-bin/snowball-email bootstrap --inbox myinbox notion --token $NOTION_TOKEN
-bin/snowball-email bootstrap --inbox myinbox gmail --label 과거고객문의 --since 90d
+bin/snowball-email bootstrap --inbox myinbox notion --page-ids <page_id> --database-ids <db_id>
+bin/snowball-email bootstrap --inbox myinbox gmail --query "label:과거고객문의 older_than:90d" --max-threads 50
 bin/snowball-email bootstrap --inbox myinbox channeltalk --export ./channeltalk_export.json
 ```
 
@@ -222,8 +222,8 @@ Empty reference means the first N drafts will all be UNKNOWN tier-A. Pre-seed kn
 
 ```bash
 bin/snowball-email bootstrap --inbox myinbox web --urls https://yourco.com/faq
-bin/snowball-email bootstrap --inbox myinbox notion --token $NOTION_TOKEN
-bin/snowball-email bootstrap --inbox myinbox gmail --label past-tickets --since 90d
+bin/snowball-email bootstrap --inbox myinbox notion --page-ids <page_id> --database-ids <db_id>
+bin/snowball-email bootstrap --inbox myinbox gmail --query "label:past-tickets older_than:90d" --max-threads 50
 bin/snowball-email bootstrap --inbox myinbox channeltalk --export ./export.json
 ```
 

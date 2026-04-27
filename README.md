@@ -114,6 +114,15 @@ bin/snowball-email view --inbox myteam
 bin/snowball-email metrics --inbox myteam --last 50
 ```
 
+추가 유틸 (전체 명령은 `bin/snowball-email --help`):
+
+```bash
+bin/snowball-email grep "환불" --inbox myteam     # reference 검색
+bin/snowball-email diff --inbox myteam            # 직전 round 대비 reference 변경
+bin/snowball-email config get send.backend --inbox myteam
+bin/snowball-email config set classify.backend llm_anthropic --inbox myteam
+```
+
 `gws` CLI나 API 키가 없어도 mock fixture로 dry-run이 동작합니다. 실제 운용은 [`docs/MANUAL.md`](docs/MANUAL.md) §4 (KO) / §4 (EN) 참고.
 
 ### 3. W2 옵션 (전부 opt-in)
@@ -247,6 +256,15 @@ bin/snowball-email view --inbox myteam
 
 # (4) KPI trend
 bin/snowball-email metrics --inbox myteam --last 50
+```
+
+Extra utilities (`bin/snowball-email --help` for the full list):
+
+```bash
+bin/snowball-email grep "refund" --inbox myteam   # search reference
+bin/snowball-email diff --inbox myteam            # reference changes since last round
+bin/snowball-email config get send.backend --inbox myteam
+bin/snowball-email config set classify.backend llm_anthropic --inbox myteam
 ```
 
 You don't need `gws` or any API key for dry-run — mock fixtures cover the full path. For real-world setup see [`docs/MANUAL.md`](docs/MANUAL.md) §4 (English).
