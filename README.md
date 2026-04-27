@@ -5,9 +5,19 @@
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-skill-orange)](https://docs.anthropic.com/claude/docs/claude-code)
 [![Gmail via gws CLI](https://img.shields.io/badge/Gmail-gws%20CLI-red)](https://github.com/GAM-team/GAM)
 
-> Gmail 라벨 1개를 받아 회신 초안을 만들고, 매 라운드마다 새 패턴·사례·표현이 reference에 쌓여 **눈덩이처럼 굴릴수록 초안이 좋아지는** 이메일 스킬. CS·BD·recruiting·partnerships·sales 모두 동일한 루프로 사용 가능.
+> **승인한 답장에서 매 라운드 학습하는 Claude Code 이메일 스킬.** 1라운드 초안은 평범하지만, 20라운드부터는 *우리 팀 톤*으로 나옵니다. inbox별 복리 학습으로 CS · BD · 채용 · 파트너십 · 세일즈를 동일한 루프로 처리합니다. gws CLI 1개 외 추가 SaaS 비용 0, 모든 발송은 명시적 승인 후에만 진행됩니다.
 >
-> Compound-learning email skill — every reply feeds the reference, so drafts snowball in quality round over round. Works for CS, BD outreach, recruiting, partnerships, and sales.
+> **A Claude Code email skill that learns from every reply you approve.** Round-1 drafts are generic; by round 20 they sound like *your team's voice*. Per-inbox compound learning covers CS, BD outreach, recruiting, partnerships, and sales in one loop. Zero extra SaaS spend (gws CLI only), every send requires explicit approval.
+
+| Persona | Use case | Tone seed |
+|---|---|---|
+| `cs` | 환불 / 문의 / 버그 리포트 회신 | 정중·구체·짧게 |
+| `bd` | cold outreach 응답, 파트너 인트로 | 명확한 가치 제안, 다음 step 1개 |
+| `recruiting` | 후보자 follow-up, 일정 조율 | 사람-우선, 솔직함 |
+| `partnerships` | 협업 검토, MOU 핸드오프 | 사실 기반, 책임 명시 |
+| `sales` | 견적 / 도입 문의 응답 | 의사결정 가속, 가격 투명성 |
+
+`init` 시 1개를 고르거나 `custom`으로 직접 정의 — 5개 모두 [`templates/personas/`](templates/personas/)에 시드 파일 있음.
 
 **전체 매뉴얼은 [`docs/MANUAL.md`](docs/MANUAL.md) (한국어 + English 동시 수록).**
 **Full bilingual manual: [`docs/MANUAL.md`](docs/MANUAL.md).**
@@ -143,6 +153,33 @@ bin/snowball-email config set classify.backend llm_anthropic --inbox myteam
 bin/snowball-email init --inbox partnerships
 bin/snowball-email run --inbox partnerships
 ```
+
+### 4.5 복리 증거 — 진짜 좋아지나? (Compound evidence)
+
+매 round마다 `metrics.jsonl`에 1줄이 적립됩니다. `bin/snowball-email metrics --inbox myteam --last 50`으로 추이를 봅니다:
+
+```
+round_id            drafts  edit%   unk   new   A   B   send
+------------------  ------  ------  ----  ----  --  --  --------
+2026-04-20T09-12Z   8       62      2     5     3   5   drafts
+2026-04-22T10-05Z   7       41      1     2     2   5   drafts
+2026-04-25T08-30Z   9       18      0     1     1   8   drafts
+```
+
+- **`edit%`** — 사용자가 초안을 얼마나 수정했나. 시간이 갈수록 떨어져야 정상 (= 학습 중)
+- **`new`** — 이번 round에서 reference에 추가된 패턴/사례 수. 초기엔 많고 점점 줄어야 정상 (= 수렴 중)
+- **`unk`** — 분류 실패 건수. 구조적으로 0에 가까워야 함
+
+`edit%`가 안 떨어지면 reference가 약하다는 신호 — `bin/snowball-email view`로 점검하고 0.5절의 부트스트랩을 더 시드하세요.
+
+### 4.6 보안 (Security)
+
+- **Gmail 토큰**: gws CLI가 OAuth 토큰을 자체적으로 관리합니다 (보통 `~/.config/gam/` 또는 `~/.gws/`). snowball-email은 토큰 파일을 *직접 읽거나 저장하지 않습니다*. gws CLI 호출만 합니다.
+- **API 키**: Anthropic / SendGrid 키는 모두 **env var에서만** 읽습니다 (`classify.api_key_env`, `send.sendgrid.api_key_env`). config 파일에 키 자체를 저장하지 마세요.
+- **발송 안전장치**: 디폴트 backend는 `gws_drafts` — Gmail 초안만 만들고 사용자가 Gmail UI에서 수동 Send. `gws_send` / `sendgrid`는 명시적 opt-in.
+- **승인 게이트**: 모든 round에서 사용자 명시 승인 후에만 발송. 자동 승인 옵션 없음 (verbatim 비협상).
+- **Audit trail**: `send.bcc`로 자기 자신을 BCC하면 발송 사본이 본인 inbox에 남음.
+- **runtime 데이터**: `inboxes/<name>/`은 `.gitignore` 처리되어 있어 reference / metrics / config가 commit되지 않습니다.
 
 ### 5. 본 스킬을 쓰지 않을 경우
 
@@ -282,6 +319,33 @@ You don't need `gws` or any API key for dry-run — mock fixtures cover the full
 ### 4. Multi-inbox
 
 Use `--inbox <name>` to separate several companies/roles. Each inbox keeps its own reference / config / metrics / bootstrap_state.
+
+### 4.5 Compound evidence — does it actually improve?
+
+Every round appends a row to `metrics.jsonl`. View the trend with `bin/snowball-email metrics --inbox myteam --last 50`:
+
+```
+round_id            drafts  edit%   unk   new   A   B   send
+------------------  ------  ------  ----  ----  --  --  --------
+2026-04-20T09-12Z   8       62      2     5     3   5   drafts
+2026-04-22T10-05Z   7       41      1     2     2   5   drafts
+2026-04-25T08-30Z   9       18      0     1     1   8   drafts
+```
+
+- **`edit%`** — how much the user edited the draft. Should trend down (= the skill is learning your voice)
+- **`new`** — patterns/cases added to the reference this round. Many at first, fewer later (= converging)
+- **`unk`** — unclassified messages. Should stay near zero structurally
+
+If `edit%` doesn't drop, your reference is thin — inspect with `bin/snowball-email view` and seed more via the bootstrap step in §0.5.
+
+### 4.6 Security
+
+- **Gmail tokens**: gws CLI manages OAuth tokens itself (typically `~/.config/gam/` or `~/.gws/`). snowball-email *never reads or stores token files directly* — it only invokes the gws CLI.
+- **API keys**: Anthropic / SendGrid keys are read **only from env vars** (`classify.api_key_env`, `send.sendgrid.api_key_env`). Never store the key itself in config files.
+- **Send safety**: Default backend is `gws_drafts` — creates Gmail drafts; the user manually clicks Send in Gmail UI. `gws_send` / `sendgrid` are explicit opt-in.
+- **Approval gate**: Every round requires explicit user approval before send. No auto-approval option (non-negotiable).
+- **Audit trail**: Set `send.bcc` to your own address for a self-BCC copy of every send.
+- **Runtime data**: `inboxes/<name>/` is gitignored — references / metrics / configs never get committed.
 
 ### 5. When NOT to use this
 
