@@ -161,4 +161,5 @@ Beyond customer support, the same loop fits BD cold-outreach replies, recruiting
 - [`docs/MANUAL.md`](docs/MANUAL.md) — 전체 매뉴얼 (KO + EN)
 - [`PLAN.md`](PLAN.md) — 설계 문서 (consensus 통과)
 - [`SKILL.md`](SKILL.md) — 스킬 entrypoint (8단계 워크플로우 명세)
-- 라이선스: 사용자 개인 도구 — 외부 배포 시 PLAN §12 참조
+- [`LICENSE`](LICENSE) — MIT License
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — 기여 가이드 (KO)

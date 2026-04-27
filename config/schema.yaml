@@ -1,5 +1,5 @@
-# support-reply-public — config schema reference (do not edit manually)
-# Use `support-reply config set <key> <value>` or `support-reply init` instead.
+# snowball-email — config schema reference (do not edit manually)
+# Use `snowball-email config set <key> <value>` or `snowball-email init` instead.
 #
 # This file documents the shape of inboxes/<inbox>/config.yaml.
 # Each user inbox owns its own config file; multiple inboxes are supported.
