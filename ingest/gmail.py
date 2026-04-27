@@ -56,7 +56,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--inbox", required=True)
     ap.add_argument("--query", default=None,
-                    help="Gmail search query; default reads from inbox config")
+                    help="Gmail search query; default 'label:support older_than:30d'")
     ap.add_argument("--max-threads", type=int, default=200)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
