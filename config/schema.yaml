@@ -16,7 +16,6 @@ inbox:
   name: string                    # logical inbox identifier (e.g., "support", "partnerships")
   label: string                   # Gmail label name (e.g., "스터디파이_서포트")
   persona: cs|bd|recruiting|partnerships|sales|custom  # selected at init; seeds principles + patterns
-  language: ko|en                 # primary draft language; default ko
 
 send:
   backend: gws_drafts|gws_send|sendgrid
@@ -51,6 +50,9 @@ learn:
 # them. Remove this section once the corresponding code lands.
 # =============================================================================
 
+# inbox:
+#   language: ko|en               # PLAN §i18n; not wired (drafts inherit incoming-email language)
+#
 # threading:
 #   preserve_in_reply_to: true    # always honored today; not configurable
 #
