@@ -134,13 +134,13 @@ snowball-email config set send.backend gws_send
 
 | Backend | 동작 | 사용자 요건 |
 |---|---|---|
-| `gws_drafts` (MVP 디폴트) | Gmail 초안 생성, 사용자 수동 Send | gws 인증만 |
-| `gws_send` (W3+, graduation gate 통과 후) | gws cli로 직접 발송 | from_email이 gws 계정 또는 verified send-as alias |
-| `sendgrid` | SendGrid v3 REST | API key |
-| `mailgun` | Mailgun REST | API key + domain |
-| `smtp` | 일반 SMTP | host/port/user/pass |
+| `gws_drafts` (디폴트) | Gmail 초안 생성, 사용자 수동 Send | gws 인증만 |
+| `gws_send` | gws cli로 직접 발송 | from_email이 gws 계정 또는 verified send-as alias |
+| `sendgrid` | SendGrid v3 REST | `SENDGRID_API_KEY` env (`send.sendgrid.api_key_env`로 키 이름 변경 가능) |
 
-**디폴트는 항상 `gws_drafts`** — 절대 자동 발송 안 함. 사용자가 Gmail UI에서 Send 누름. graduation gate (PLAN §6.3): N≥10 round, edit_ratio<15%, claims=0 통과 시 `gws_send` 권장.
+**디폴트는 항상 `gws_drafts`** — 절대 자동 발송 안 함. 사용자가 Gmail UI에서 Send 누름. `gws_send` / `sendgrid` 전환은 `bin/snowball-email config set send.backend …`로 명시적 opt-in.
+
+> FUTURE (PLAN.md에 설계됨, 현재 미구현): `mailgun`, `smtp`, graduation gate (N≥10 round + edit_ratio<15% 통과 시 `gws_send` 자동 권장).
 
 ## 9. 다중 inbox 지원 / Multi-inbox
 
@@ -154,14 +154,16 @@ snowball-email config set send.backend gws_send
 - 새 외부 링크 (known_links.txt에 없음) → tier-A
 - 금액 표현 (regex 매치) → tier-A
 - UNKNOWN 분류 → tier-A
-- BCC self (감사 trail) 디폴트 ON
+- BCC self (감사 trail): `send.bcc`에 자기 주소 입력 시 활성화 (디폴트는 빈 문자열 = 비활성)
 - threading 헤더 (In-Reply-To/References) 항상 보존
 
 ## 11. 학습/프롬프트 / Learning & prompt strategy
 
-- learner 모델: 디폴트 `claude-sonnet-4-6`, `config set learner.model`로 변경 가능
-- 매 round 끝에 사용자에게 "이 초안 별로다?" feedback 1회 prompt (config로 끌 수 있음, 5회 누적 skip 시 경고)
-- 사용자 수동 edit이 발생한 경우 edit_ratio 기록, 임계값 초과 시 `bootstrap_pending.md`에 새 후보 자동 추가
+- 분류 backend: `classify.backend = substring` (디폴트, 무료) 또는 `llm_anthropic` (Anthropic Haiku, `ANTHROPIC_API_KEY` 필요). 키 누락·네트워크 실패 시 substring으로 자동 fallback.
+- 사용자가 초안을 수정하면 edit_ratio가 `metrics.jsonl`에 기록 — 추세를 `bin/snowball-email metrics`로 확인.
+- 승인+발송된 회신을 자동으로 `cases/<cls>.jsonl`에 누적하려면 `learn.auto_case = true` (디폴트 false; dry-run / UNKNOWN은 제외).
+
+> FUTURE (PLAN.md에 설계됨, 현재 미구현): 별도 `learner.model` 설정, 매 round "이 초안 별로다?" 자동 feedback prompt, edit_ratio 임계값 초과 시 `bootstrap_pending.md` 자동 후보 추가.
 
 ## 12. 부트스트랩 안 해도 동작 / Bootstrap is optional
 
