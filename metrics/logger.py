@@ -22,8 +22,8 @@ import os
 import sys
 from pathlib import Path
 
-HOME = Path(os.environ.get("SUPPORT_REPLY_HOME",
-                           Path.home() / ".claude/skills/support-reply-public"))
+HOME = Path(os.environ.get("SNOWBALL_EMAIL_HOME",
+                           Path.home() / ".claude/skills/snowball-email"))
 
 
 def edit_ratio(approved: str, draft: str) -> float:

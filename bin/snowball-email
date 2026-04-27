@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""support-reply — compound-learning email support skill CLI dispatcher.
+"""snowball-email — compound-learning email support skill CLI dispatcher.
 
 Subcommands (W1 MVP scope, locked from PLAN.md §10 Pin-2):
     init                          Interactive setup wizard (no raw yaml editing)
@@ -13,7 +13,7 @@ Subcommands (W1 MVP scope, locked from PLAN.md §10 Pin-2):
     run [--inbox NAME] [--dry-run]    One round: fetch unread → classify → draft → approve → send
 
 Conventions:
-    - All commands honor $SUPPORT_REPLY_HOME (default: ~/.claude/skills/support-reply-public)
+    - All commands honor $SNOWBALL_EMAIL_HOME (default: ~/.claude/skills/snowball-email)
     - All file I/O is idempotent and resumable
     - Every round writes one line to inboxes/<inbox>/metrics.jsonl
     - --dry-run never modifies Gmail state or sends mail
@@ -26,8 +26,8 @@ import os
 import sys
 from pathlib import Path
 
-HOME = Path(os.environ.get("SUPPORT_REPLY_HOME",
-                           Path.home() / ".claude/skills/support-reply-public"))
+HOME = Path(os.environ.get("SNOWBALL_EMAIL_HOME",
+                           Path.home() / ".claude/skills/snowball-email"))
 INBOXES_DIR = HOME / "inboxes"
 
 
@@ -280,7 +280,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="support-reply",
+    parser = argparse.ArgumentParser(prog="snowball-email",
                                      description="Compound-learning email support CLI")
     sub = parser.add_subparsers(dest="cmd", required=True)
 

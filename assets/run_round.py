@@ -29,8 +29,8 @@ import sys
 import time
 from pathlib import Path
 
-HOME = Path(os.environ.get("SUPPORT_REPLY_HOME",
-                           Path.home() / ".claude/skills/support-reply-public"))
+HOME = Path(os.environ.get("SNOWBALL_EMAIL_HOME",
+                           Path.home() / ".claude/skills/snowball-email"))
 
 sys.path.insert(0, str(HOME / "approval"))
 sys.path.insert(0, str(HOME / "metrics"))
@@ -395,7 +395,7 @@ def run(inbox: str, *, dry_run: bool = False, fixture: str | None = None,
         messages_full = json.loads(fixture_path.read_text(encoding="utf-8"))
     else:
         if not label:
-            print("[run] inbox.label required for live run; set via `support-reply config set inbox.label <name>`",
+            print("[run] inbox.label required for live run; set via `snowball-email config set inbox.label <name>`",
                   file=sys.stderr)
             return 1
         msgs = fetch_unread(label)

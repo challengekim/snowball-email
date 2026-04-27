@@ -19,8 +19,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import begin_run, finish_run, update_run, append_pending
 
-HOME = Path(os.environ.get("SUPPORT_REPLY_HOME",
-                           Path.home() / ".claude/skills/support-reply-public"))
+HOME = Path(os.environ.get("SNOWBALL_EMAIL_HOME",
+                           Path.home() / ".claude/skills/snowball-email"))
 
 
 def _have(cmd: str) -> bool:
@@ -29,7 +29,7 @@ def _have(cmd: str) -> bool:
 
 def fetch_url(url: str, timeout: int = 30) -> str | None:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "support-reply-public/0.1"})
+        req = urllib.request.Request(url, headers={"User-Agent": "snowball-email/0.1"})
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.read().decode("utf-8", errors="replace")
     except Exception as e:

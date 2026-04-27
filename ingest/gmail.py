@@ -23,8 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import (begin_run, finish_run, update_run,
                      append_pending, inbox_dir)
 
-HOME = Path(os.environ.get("SUPPORT_REPLY_HOME",
-                           Path.home() / ".claude/skills/support-reply-public"))
+HOME = Path(os.environ.get("SNOWBALL_EMAIL_HOME",
+                           Path.home() / ".claude/skills/snowball-email"))
 
 
 def _have_gws() -> bool:
