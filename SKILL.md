@@ -1,6 +1,6 @@
 ---
 name: snowball-email
-description: Compound-learning email reply skill for customer support, BD outreach, partnerships, recruiting, and sales — gws cli 기반 Gmail 회신 초안 생성, 4개 소스 부트스트랩 ingestion, reference 누적으로 회를 거듭할수록 초안 품질 복리 향상. init 시 persona (cs|bd|recruiting|partnerships|sales)를 골라 톤·시드 패턴을 자동 세팅. 모든 발송은 사용자 명시 승인 후 진행 (verbatim 비협상). 2-tier (A/B) 승인 게이트 + conservative bias 분류기. 다중 inbox 지원.
+description: Explicit-approval Gmail reply skill (gws CLI) with per-inbox local reference. Classifies via a compounding pattern store; drafts are template-based until v0.2 reference-driven drafting lands.
 type: workflow
 languages: [ko, en]
 ---
