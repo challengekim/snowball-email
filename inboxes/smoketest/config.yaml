@@ -1,0 +1,6 @@
+inbox.label: smoketest
+send.backend: gws_drafts
+send.from_email: support@example.com
+send.from_name: Support
+draft.signoff: 감사합니다.
+classify.backend: substring

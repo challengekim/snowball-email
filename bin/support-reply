@@ -1,0 +1,337 @@
+#!/usr/bin/env python3
+"""support-reply — compound-learning email support skill CLI dispatcher.
+
+Subcommands (W1 MVP scope, locked from PLAN.md §10 Pin-2):
+    init                          Interactive setup wizard (no raw yaml editing)
+    config get <key>              Read a config value
+    config set <key> <value>      Write a config value
+    bootstrap <source> [...]      Run a bootstrap ingestion source (gmail|web|notion|channeltalk)
+    view [--inbox NAME]           Print _compiled.md (flat reference view)
+    grep <pattern> [--inbox NAME] Search reference files
+    diff [--inbox NAME]           Show reference changes since last round
+    metrics [--inbox NAME] [--last N]  Print KPI trends (W2: full table; W1: count only)
+    run [--inbox NAME] [--dry-run]    One round: fetch unread → classify → draft → approve → send
+
+Conventions:
+    - All commands honor $SUPPORT_REPLY_HOME (default: ~/.claude/skills/support-reply-public)
+    - All file I/O is idempotent and resumable
+    - Every round writes one line to inboxes/<inbox>/metrics.jsonl
+    - --dry-run never modifies Gmail state or sends mail
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+HOME = Path(os.environ.get("SUPPORT_REPLY_HOME",
+                           Path.home() / ".claude/skills/support-reply-public"))
+INBOXES_DIR = HOME / "inboxes"
+
+
+def _config_path(inbox: str) -> Path:
+    return INBOXES_DIR / inbox / "config.yaml"
+
+
+def _read_flat_config(path: Path) -> dict[str, str]:
+    """Stdlib-only flat key=value reader. Preserves comments by skipping `#`."""
+    out: dict[str, str] = {}
+    if not path.exists():
+        return out
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line or ":" not in line:
+            continue
+        k, _, v = line.partition(":")
+        out[k.strip()] = v.strip().strip('"').strip("'")
+    return out
+
+
+def _write_flat_config(path: Path, kv: dict[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = "\n".join(f"{k}: {v}" for k, v in kv.items()) + "\n"
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(body, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+_INIT_PROMPTS = [
+    ("inbox.name", "Inbox 이름 (영문 식별자)", "default"),
+    ("inbox.persona", "Persona (cs | bd | recruiting | partnerships | sales | custom)", "cs"),
+    ("inbox.label", "Gmail 라벨 (예: support, bd_outreach)", ""),
+    ("send.backend", "발송 backend (gws_drafts | gws_send | sendgrid)", "gws_drafts"),
+    ("send.from_email", "발신 주소", ""),
+    ("send.from_name", "발신자 표시명", ""),
+    ("send.bcc", "BCC (감사용 자기자신; 빈값 가능)", ""),
+    ("draft.signoff", "서명 (마지막 줄 없이)", "감사합니다."),
+    ("classify.backend", "분류기 (substring=무료/오프라인 | llm_anthropic=고품질, API키 필요)",
+     "substring"),
+    ("classify.api_key_env", "LLM API 키 환경변수 이름 (llm_anthropic 사용 시)",
+     "ANTHROPIC_API_KEY"),
+    ("learn.auto_case", "성공 회신마다 case 자동 누적? (true | false)", "false"),
+]
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    inbox = args.inbox or "default"
+    cfg_path = _config_path(inbox)
+    existing = _read_flat_config(cfg_path)
+    print(f"[init] inbox={inbox} config={cfg_path}", file=sys.stderr)
+    out: dict[str, str] = dict(existing)
+    for key, label, default in _INIT_PROMPTS:
+        cur = existing.get(key, default)
+        prompt = f"  {label} [{cur}]: "
+        try:
+            val = input(prompt).strip()
+        except EOFError:
+            val = ""
+        out[key] = val if val else cur
+    _write_flat_config(cfg_path, out)
+    print(f"[init] wrote {cfg_path}", file=sys.stderr)
+    persona = (out.get("inbox.persona") or "cs").strip().lower()
+    _seed_persona(inbox, persona)
+    return 0
+
+
+def _seed_persona(inbox: str, persona: str) -> None:
+    """Copy persona principles + (cs|bd) pattern templates into the inbox reference dir.
+
+    Idempotent: existing files are not overwritten.
+    """
+    sys.path.insert(0, str(HOME / "assets"))
+    try:
+        import reference_store as rs
+    except ImportError as e:
+        print(f"[init] persona seed skipped (reference_store import failed: {e})", file=sys.stderr)
+        return
+    inbox_dir = INBOXES_DIR / inbox
+    rs.ensure_layout(inbox_dir)
+    persona_src = HOME / "templates" / "personas" / f"{persona}.md"
+    if persona_src.exists():
+        dst = inbox_dir / "reference" / "principles.md"
+        body = persona_src.read_text(encoding="utf-8")
+        if not dst.exists() or dst.read_text(encoding="utf-8").startswith("# Tone & manner principles"):
+            dst.write_text(body, encoding="utf-8")
+            print(f"[init] seeded principles.md from persona '{persona}'", file=sys.stderr)
+    else:
+        print(f"[init] persona template not found: {persona_src} (skipping)", file=sys.stderr)
+    pat_src_dir = HOME / "templates" / "patterns" / persona
+    if pat_src_dir.is_dir():
+        copied = 0
+        for src in sorted(pat_src_dir.glob("*.md")):
+            pid = src.stem
+            try:
+                ok = rs.append_pattern(inbox_dir, pid, src.read_text(encoding="utf-8"))
+            except ValueError as e:
+                print(f"[init] skip pattern {pid}: {e}", file=sys.stderr)
+                continue
+            if ok:
+                copied += 1
+        print(f"[init] seeded {copied} '{persona}' pattern(s)", file=sys.stderr)
+
+
+def cmd_config(args: argparse.Namespace) -> int:
+    inbox = getattr(args, "inbox", None) or "default"
+    cfg_path = _config_path(inbox)
+    cfg = _read_flat_config(cfg_path)
+    if args.op == "get":
+        if args.key not in cfg:
+            print(f"[config get] key not set: {args.key}", file=sys.stderr)
+            return 1
+        print(cfg[args.key])
+        return 0
+    if args.op == "set":
+        if args.value is None:
+            print("[config set] value required", file=sys.stderr)
+            return 2
+        cfg[args.key] = args.value
+        _write_flat_config(cfg_path, cfg)
+        print(f"[config set] {args.key}={args.value} → {cfg_path}", file=sys.stderr)
+        return 0
+    return 1
+
+
+def cmd_bootstrap(args: argparse.Namespace) -> int:
+    src = args.source
+    script = HOME / "ingest" / f"{src}.py"
+    if not script.exists():
+        print(f"[bootstrap {src}] script not found: {script}", file=sys.stderr)
+        return 1
+    cmd = [sys.executable, str(script), "--inbox", args.inbox]
+    if args.dry_run:
+        cmd.append("--dry-run")
+    extra = getattr(args, "extra", None) or []
+    cmd.extend(extra)
+    print(f"[bootstrap {src}] invoking: {' '.join(cmd)}", file=sys.stderr)
+    import subprocess
+    proc = subprocess.run(cmd)
+    return proc.returncode
+
+
+def _inbox_dir(name: str) -> Path:
+    return INBOXES_DIR / name
+
+
+def cmd_view(args: argparse.Namespace) -> int:
+    p = _inbox_dir(args.inbox) / "reference" / "_compiled.md"
+    if not p.exists():
+        print(f"[view] no _compiled.md at {p}; run a round to generate one", file=sys.stderr)
+        return 1
+    sys.stdout.write(p.read_text())
+    return 0
+
+
+def cmd_grep(args: argparse.Namespace) -> int:
+    ref_dir = _inbox_dir(args.inbox) / "reference"
+    if not ref_dir.exists():
+        print(f"[grep] no reference dir at {ref_dir}", file=sys.stderr)
+        return 1
+    import re
+    pattern = re.compile(args.pattern)
+    hits = 0
+    for path in sorted(ref_dir.rglob("*")):
+        if not path.is_file() or path.suffix not in (".md", ".jsonl", ".txt"):
+            continue
+        try:
+            for ln, line in enumerate(path.read_text().splitlines(), start=1):
+                if pattern.search(line):
+                    sys.stdout.write(f"{path.relative_to(HOME)}:{ln}:{line}\n")
+                    hits += 1
+        except UnicodeDecodeError:
+            continue
+    return 0 if hits else 1
+
+
+def cmd_diff(args: argparse.Namespace) -> int:
+    ref_dir = _inbox_dir(args.inbox) / "reference"
+    snap = ref_dir / "_last_round_snapshot.txt"
+    compiled = ref_dir / "_compiled.md"
+    if not compiled.exists():
+        print(f"[diff] no _compiled.md to diff against", file=sys.stderr)
+        return 1
+    if not snap.exists():
+        print(f"[diff] no prior snapshot — first round, no diff yet", file=sys.stderr)
+        return 0
+    import difflib
+    a = snap.read_text().splitlines()
+    b = compiled.read_text().splitlines()
+    sys.stdout.write("\n".join(difflib.unified_diff(a, b, fromfile="prev", tofile="current",
+                                                    lineterm="")))
+    sys.stdout.write("\n")
+    return 0
+
+
+def cmd_metrics(args: argparse.Namespace) -> int:
+    p = _inbox_dir(args.inbox) / "metrics.jsonl"
+    if not p.exists():
+        print(f"[metrics] no metrics.jsonl yet at {p}", file=sys.stderr)
+        return 1
+    lines = p.read_text().splitlines()
+    last_n = lines[-args.last:] if args.last else lines
+    rows: list[dict] = []
+    for ln in last_n:
+        try:
+            rows.append(json.loads(ln))
+        except json.JSONDecodeError:
+            continue
+    if not rows:
+        print("[metrics] no parseable rounds", file=sys.stderr)
+        return 1
+
+    cols = [("round_id", 18), ("drafts", 6), ("edit%", 6), ("unk", 4),
+            ("new", 4), ("A", 3), ("B", 3), ("send", 8)]
+    header = "  ".join(f"{name:<{w}}" for name, w in cols)
+    sep = "  ".join("-" * w for _, w in cols)
+    print(f"[metrics] inbox={args.inbox} rounds={len(rows)} (last {args.last})")
+    print(header)
+    print(sep)
+    for d in rows:
+        rid = (d.get("round_id") or "")[:18]
+        drafts = d.get("drafts_count", 0)
+        edit_pct = f"{(d.get('edit_ratio') or 0) * 100:.0f}%"
+        unk = d.get("unknown_count", 0)
+        new = d.get("new_patterns", 0)
+        a = d.get("tier_a_count", 0)
+        b = d.get("tier_b_count", 0)
+        status = (d.get("send_status") or "")[:8]
+        vals = [str(rid), str(drafts), edit_pct, str(unk), str(new), str(a), str(b), status]
+        print("  ".join(f"{v:<{w}}" for v, (_, w) in zip(vals, cols)))
+
+    n = len(rows)
+    avg_edit = sum((r.get("edit_ratio") or 0) for r in rows) / n
+    total_unk = sum((r.get("unknown_count") or 0) for r in rows)
+    total_new = sum((r.get("new_patterns") or 0) for r in rows)
+    total_a = sum((r.get("tier_a_count") or 0) for r in rows)
+    total_b = sum((r.get("tier_b_count") or 0) for r in rows)
+    tier_a_pct = (total_a / (total_a + total_b) * 100) if (total_a + total_b) else 0
+    print(sep)
+    print(f"summary: avg_edit={avg_edit*100:.1f}%  unknown={total_unk}  "
+          f"new_patterns={total_new}  tier-A={tier_a_pct:.0f}%  total_drafts={total_a + total_b}")
+    return 0
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    sys.path.insert(0, str(HOME / "assets"))
+    import run_round
+    return run_round.run(args.inbox, dry_run=args.dry_run, fixture=args.fixture,
+                         auto_approve=args.auto_approve)
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="support-reply",
+                                     description="Compound-learning email support CLI")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_init = sub.add_parser("init", help="Interactive setup wizard")
+    p_init.add_argument("--inbox", default="default")
+    p_init.set_defaults(fn=cmd_init)
+
+    p_cfg = sub.add_parser("config", help="Read/write config")
+    p_cfg.add_argument("op", choices=["get", "set"])
+    p_cfg.add_argument("key")
+    p_cfg.add_argument("value", nargs="?")
+    p_cfg.add_argument("--inbox", default="default")
+    p_cfg.set_defaults(fn=cmd_config)
+
+    p_boot = sub.add_parser("bootstrap", help="Ingest a knowledge source")
+    p_boot.add_argument("--inbox", default="default")
+    p_boot.add_argument("--dry-run", action="store_true")
+    p_boot.add_argument("source", choices=["gmail", "web", "notion", "channeltalk"])
+    p_boot.add_argument("extra", nargs=argparse.REMAINDER,
+                        help="Additional args passed through to ingest script (place after source)")
+    p_boot.set_defaults(fn=cmd_bootstrap)
+
+    p_view = sub.add_parser("view", help="Print compiled reference")
+    p_view.add_argument("--inbox", default="default")
+    p_view.set_defaults(fn=cmd_view)
+
+    p_grep = sub.add_parser("grep", help="Search reference files")
+    p_grep.add_argument("pattern")
+    p_grep.add_argument("--inbox", default="default")
+    p_grep.set_defaults(fn=cmd_grep)
+
+    p_diff = sub.add_parser("diff", help="Show reference changes since last round")
+    p_diff.add_argument("--inbox", default="default")
+    p_diff.set_defaults(fn=cmd_diff)
+
+    p_met = sub.add_parser("metrics", help="Print KPI metrics")
+    p_met.add_argument("--inbox", default="default")
+    p_met.add_argument("--last", type=int, default=10)
+    p_met.set_defaults(fn=cmd_metrics)
+
+    p_run = sub.add_parser("run", help="Run one round")
+    p_run.add_argument("--inbox", default="default")
+    p_run.add_argument("--dry-run", action="store_true")
+    p_run.add_argument("--fixture", help="Override mock fixture path (dry-run only)")
+    p_run.add_argument("--auto-approve", action="store_true",
+                       help="Skip stdin approval prompt (smoketest only)")
+    p_run.set_defaults(fn=cmd_run)
+
+    args = parser.parse_args(argv)
+    return args.fn(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

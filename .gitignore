@@ -1,0 +1,25 @@
+# Per-inbox runtime state — never share across users
+inboxes/*/metrics.jsonl
+inboxes/*/bootstrap_state.json
+inboxes/*/reference/_backups/
+inboxes/*/reference/_compiled.md
+inboxes/*/reference/_last_round_snapshot.txt
+
+# Tooling state
+.omc/
+.serena/
+HANDOFF.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.tmp

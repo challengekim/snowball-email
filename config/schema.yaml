@@ -1,0 +1,71 @@
+# support-reply-public — config schema reference (do not edit manually)
+# Use `support-reply config set <key> <value>` or `support-reply init` instead.
+#
+# This file documents the shape of inboxes/<inbox>/config.yaml.
+# Each user inbox owns its own config file; multiple inboxes are supported.
+
+inbox:
+  name: string                    # logical inbox identifier (e.g., "support", "partnerships")
+  label: string                   # Gmail label name (e.g., "스터디파이_서포트")
+  language: ko|en                 # primary draft language; default ko
+
+send:
+  backend: gws_drafts|gws_send|sendgrid|mailgun|smtp
+  # gws_drafts (MVP default — safe, never auto-sends):
+  #   creates Gmail drafts; user manually presses Send in Gmail UI
+  # gws_send (W3+, requires graduation gate):
+  #   sends directly via gws cli; the authenticated Gmail account must
+  #   own the from_email or have it as a verified send-as alias
+  # sendgrid|mailgun|smtp:
+  #   plug-in backends; require backend-specific credentials in env
+  from_email: string              # sender address shown to recipient
+  from_name: string               # sender display name
+  bcc_self: bool                  # default true; BCC the from_email for audit trail
+  reply_to: string|null           # optional Reply-To override
+
+threading:
+  preserve_in_reply_to: true      # always honor In-Reply-To/References from source
+
+reference:
+  data_dir: string                # default: inboxes/<name>/reference/
+                                  # contains core.md, patterns/*.md, cases/*.jsonl, _compiled.md
+  language_whitelists: bool       # CRIT-2: language-segregated whitelists; default true
+  conflict_jaccard: float         # default 0.7; tuned only on user signal, no auto-tuning
+
+learner:
+  model: string                   # default "claude-sonnet-4-6"; user-overridable per CRIT-3
+  feedback_prompt: bool           # default true; ask user "이 초안 별로다?" each round
+                                  # skip allowed; warn after 5 cumulative skips
+
+approval:
+  tier_a_force_first_n: int       # default 5; first N rounds force tier-A on every draft
+  tier_classifier:
+    confidence_floor: float       # default 0.85; below floor → force tier-A
+    calibration_rounds: int       # default 30; force-all-tier-A during calibration
+    calibration_pass_rate: float  # default 0.95; below this, extend calibration
+    dual_gate_for_classes: [c, d] # require regex AND llm match for these tier triggers
+  tier_b_batch_confirm: bool      # W2+ only; default false until graduation gate passes
+
+graduation:
+  enabled: bool                   # default false; W3+
+  min_rounds: int                 # default 10
+  max_edit_ratio: float           # default 0.15; recomputed in W2 dogfooding (75th percentile)
+  zero_claims_required: bool      # default true
+  post_graduation_single_send_n: int  # default 5; tier-A still applies in addition
+
+bootstrap:
+  state_file: string              # default: inboxes/<name>/bootstrap_state.json
+                                  # tracks idempotent run_id (ISO 8601 UTC second precision)
+  pending_review_file: string     # default: inboxes/<name>/bootstrap_pending.md
+  sources:                        # all optional; can run any subset
+    gmail:
+      query: string               # e.g., "label:support older_than:90d"
+      max_threads: int            # default 200; protects token budget
+    web:
+      urls: [string]              # FAQ pages, intro deck PDFs, etc
+      max_pages: int              # default 50
+    notion:
+      page_ids: [string]          # via Notion MCP
+      database_ids: [string]
+    channeltalk:
+      export_path: string         # local path to ChannelTalk JSON export

@@ -1,0 +1,11 @@
+inbox.name: bdtest
+inbox.persona: bd
+inbox.label: bd_label
+send.backend: gws_drafts
+send.from_email: 
+send.from_name: 
+send.bcc: 
+draft.signoff: 감사합니다.
+classify.backend: substring
+classify.api_key_env: ANTHROPIC_API_KEY
+learn.auto_case: false

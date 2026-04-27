@@ -1,0 +1,110 @@
+[
+  {
+    "id": "mock_001",
+    "threadId": "th_001",
+    "labelIds": [
+      "INBOX",
+      "UNREAD",
+      "Label_Support"
+    ],
+    "payload": {
+      "mimeType": "text/plain",
+      "headers": [
+        {
+          "name": "From",
+          "value": "홍길동 <gildong@example.org>"
+        },
+        {
+          "name": "To",
+          "value": "support@example.com"
+        },
+        {
+          "name": "Subject",
+          "value": "환불 가능한가요?"
+        },
+        {
+          "name": "Message-ID",
+          "value": "<orig001@example.org>"
+        },
+        {
+          "name": "Date",
+          "value": "Sun, 26 Apr 2026 10:00:00 +0900"
+        }
+      ],
+      "body": {
+        "data": "7JWI64WV7ZWY7IS47JqUIO2ZmOu2iCDqsIDriqXtlZzqsIDsmpQ_IDUwLDAwMOybkCDqsrDsoJztlojsirXri4jri6QuCg"
+      }
+    }
+  },
+  {
+    "id": "mock_002",
+    "threadId": "th_002",
+    "labelIds": [
+      "INBOX",
+      "UNREAD",
+      "Label_Support"
+    ],
+    "payload": {
+      "mimeType": "multipart/alternative",
+      "headers": [
+        {
+          "name": "From",
+          "value": "<info@partner.com>"
+        },
+        {
+          "name": "To",
+          "value": "support@example.com"
+        },
+        {
+          "name": "Subject",
+          "value": "B2B 제휴 문의"
+        },
+        {
+          "name": "Message-ID",
+          "value": "<orig002@partner.com>"
+        }
+      ],
+      "parts": [
+        {
+          "mimeType": "text/plain",
+          "body": {
+            "data": "7KCc7Zy0IOusuOydmCDrk5zrpr3ri4jri6QuIOyekOyEuO2VnCDrgrTsmqnsnYAgaHR0cHM6Ly9tYWxpY2lvdXMuZXhhbXBsZS9hYmMg7JeQ7IScIO2ZleyduO2VmOyEuOyalC4"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mock_003",
+    "threadId": "th_003",
+    "labelIds": [
+      "INBOX",
+      "UNREAD",
+      "Label_Support"
+    ],
+    "payload": {
+      "mimeType": "text/plain",
+      "headers": [
+        {
+          "name": "From",
+          "value": "김철수 <chulsoo@example.net>"
+        },
+        {
+          "name": "To",
+          "value": "support@example.com"
+        },
+        {
+          "name": "Subject",
+          "value": "간단한 확인 요청"
+        },
+        {
+          "name": "Message-ID",
+          "value": "<orig003@example.net>"
+        }
+      ],
+      "body": {
+        "data": "7ZmV7J24IOu2gO2DgeuTnOumveuLiOuLpC4KCi0tCuq5gOyyoOyImA"
+      }
+    }
+  }
+]
