@@ -22,6 +22,32 @@
 - 모든 발송은 사용자 명시 승인 후 진행 — verbatim 비협상
 - **W1 baseline만으로도 끝까지 동작합니다.** 추가 기능(W2)은 전부 opt-in
 
+### 0. 설치 (Install)
+
+**필수 (Required)**
+- Python 3.9 이상 (`python3 --version`으로 확인)
+- git
+- macOS / Linux (Windows는 WSL 권장)
+
+**선택 (Optional, 실제 운용 시 필요)**
+- [`gws` CLI](https://github.com/GAM-team/GAM) — 실제 Gmail 연동. 없으면 mock fixture로 dry-run만 가능
+- Anthropic API 키 — W2의 LLM 분류기 사용 시. 없으면 substring 분류기로 fallback (대부분 충분)
+
+**설치 (Install)**
+
+```bash
+# Claude Code skills 디렉토리에 clone
+git clone https://github.com/challengekim/snowball-email.git ~/.claude/skills/snowball-email
+
+# 동작 확인
+cd ~/.claude/skills/snowball-email
+bin/snowball-email --help
+```
+
+추가로 설치할 의존성은 **없습니다** — Python 표준 라이브러리만 사용. `pip install` 불필요.
+
+Claude Code에서는 자동으로 `/snowball-email`로 인식됩니다.
+
 ### 1. 본 스킬은 무엇인가
 
 Gmail 라벨 1개를 받아서, 매 round마다 다음 8단계를 자동으로 돕습니다:
@@ -97,6 +123,32 @@ CS 외에도 BD cold outreach 응답, recruiting 후보자 follow-up, partnershi
 - Uses only the `gws` CLI (Google Workspace) — zero extra SaaS spend
 - Every send requires explicit user approval — non-negotiable
 - **W1 baseline runs end-to-end on its own.** All extras (W2) are opt-in
+
+### 0. Install
+
+**Required**
+- Python 3.9+ (`python3 --version` to check)
+- git
+- macOS / Linux (Windows: use WSL)
+
+**Optional (for real Gmail use)**
+- [`gws` CLI](https://github.com/GAM-team/GAM) — actual Gmail integration. Without it, only `--dry-run` works (uses mock fixtures)
+- Anthropic API key — for W2's LLM classifier. Falls back to substring matching when missing (good enough for most cases)
+
+**Install**
+
+```bash
+# Clone into your Claude Code skills directory
+git clone https://github.com/challengekim/snowball-email.git ~/.claude/skills/snowball-email
+
+# Verify
+cd ~/.claude/skills/snowball-email
+bin/snowball-email --help
+```
+
+**No extra dependencies** — pure Python stdlib. No `pip install` needed.
+
+Claude Code auto-discovers it as `/snowball-email`.
 
 ### 1. What it does
 
