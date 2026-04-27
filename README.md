@@ -48,6 +48,39 @@ bin/snowball-email --help
 
 Claude Code에서는 자동으로 `/snowball-email`로 인식됩니다.
 
+### 0.5 부트스트랩 (초기 학습 — cold-start → warm-start)
+
+처음부터 양질의 초안을 받으려면 **첫 사용 전에 회사 자산을 reference에 시드**하세요. 4개 소스를 지원하고, 모든 소스는 `bootstrap_pending.md`에 후보를 쌓아두면 사용자가 한 줄씩 검토·승인 후에야 reference에 반영됩니다 (자동 승인 없음).
+
+```bash
+# (a) 홈페이지 / FAQ / 소개서 PDF — urllib으로 fetch, 로컬 PDF는 pdftotext
+bin/snowball-email bootstrap --inbox myteam web \
+  --urls https://yourcompany.com/faq https://yourcompany.com/about /path/to/deck.pdf
+
+# (b) 과거 이메일 — gws cli로 라벨/검색어 매칭 thread 가져와 패턴 후보 추출
+bin/snowball-email bootstrap --inbox myteam gmail \
+  --query "label:support older_than:90d" --max-threads 50
+
+# (c) Notion 페이지/DB — 사내 위키, FAQ, 운영 가이드
+bin/snowball-email bootstrap --inbox myteam notion \
+  --page-ids <page_id> --database-ids <db_id>
+
+# (d) 채널톡 export JSON — 과거 상담 대화
+bin/snowball-email bootstrap --inbox myteam channeltalk \
+  --export /path/to/channeltalk-export.json
+```
+
+각 명령은 `--dry-run`을 지원해서 실제 reference 변경 없이 후보만 확인할 수 있습니다.
+
+**검토 흐름:**
+1. 위 명령들이 후보를 `inboxes/<name>/bootstrap_pending.md`에 추가합니다
+2. 파일을 열어 한 줄씩 검토 — 살릴 항목은 `[x]`, 버릴 항목은 그대로 두기
+3. `bin/snowball-email view --inbox myteam`으로 reference 반영 결과 확인
+
+**중단 후 재개:** 각 inbox는 `bootstrap_state.json`으로 idempotent resume을 지원합니다. 중간에 멈춰도 같은 명령을 다시 실행하면 마지막 cursor에서 이어서 진행됩니다.
+
+부트스트랩을 건너뛰어도 동작은 하지만, **첫 회신 품질이 평범한 수준에서 시작**합니다. 회사 자산이 있으면 시드해두는 걸 강하게 권장합니다.
+
 ### 1. 본 스킬은 무엇인가
 
 Gmail 라벨 1개를 받아서, 매 round마다 다음 8단계를 자동으로 돕습니다:
@@ -149,6 +182,39 @@ bin/snowball-email --help
 **No extra dependencies** — pure Python stdlib. No `pip install` needed.
 
 Claude Code auto-discovers it as `/snowball-email`.
+
+### 0.5 Bootstrap (cold-start → warm-start)
+
+For quality drafts from day one, **seed the reference with your company's assets before the first run**. Four sources are supported. Every source appends candidates to `bootstrap_pending.md` for line-by-line user review — nothing lands in `reference/` until you approve it (no auto-approval).
+
+```bash
+# (a) Website / FAQ / decks — fetched via urllib; local PDFs via pdftotext
+bin/snowball-email bootstrap --inbox myteam web \
+  --urls https://yourcompany.com/faq https://yourcompany.com/about /path/to/deck.pdf
+
+# (b) Past Gmail threads — gws cli pulls matching threads and extracts pattern candidates
+bin/snowball-email bootstrap --inbox myteam gmail \
+  --query "label:support older_than:90d" --max-threads 50
+
+# (c) Notion pages / databases — internal wiki, FAQ, ops guides
+bin/snowball-email bootstrap --inbox myteam notion \
+  --page-ids <page_id> --database-ids <db_id>
+
+# (d) ChannelTalk export JSON — historical chat transcripts
+bin/snowball-email bootstrap --inbox myteam channeltalk \
+  --export /path/to/channeltalk-export.json
+```
+
+Each command supports `--dry-run` to preview without touching the reference.
+
+**Review flow:**
+1. The commands above append candidates to `inboxes/<name>/bootstrap_pending.md`
+2. Open the file and review line by line — mark items to keep with `[x]`, leave others as-is
+3. Run `bin/snowball-email view --inbox myteam` to inspect the resulting reference
+
+**Resume after interruption:** Each inbox tracks progress in `bootstrap_state.json` for idempotent resume. If you stop mid-way, re-running the same command picks up from the last successful cursor.
+
+Skipping bootstrap still works, but **early drafts will be plain**. If you have any existing assets, seeding them is strongly recommended.
 
 ### 1. What it does
 
