@@ -17,6 +17,27 @@ languages: [ko, en]
 - 사용자가 "support 답장", "회신 초안", "snowball-email 돌려", "BD 회신", "cold outreach 답장" 등으로 요청할 때
 - 부트스트랩이 필요할 때: "snowball-email 부트스트랩", "이 라벨로 첫 세팅"
 
+### 1.5 Status & Roadmap (v0.1.x → v0.2)
+
+본 스킬에서 **이미 작동하는 부분과 v0.2까지 placeholder/장식적인 부분**을 분리합니다 (CHANGELOG.md / README §Status & Roadmap 동일 내용).
+
+**v0.1.x에서 진짜 작동하는 것 / Genuinely working today**
+- gws cli로 라벨에서 unread thread fetch
+- substring + LLM 분류기 (`classifier/`)
+- `assets/reference_store.py` 패턴 누적 → **분류 정확도가 round-over-round 향상** (UNKNOWN 비율 감소; classification 단계의 compound는 진짜)
+- 2-tier 승인 게이트 (Tier-A 강제 / Tier-B 일괄)
+- `gws_drafts` 백엔드로 Gmail 초안 생성
+- `metrics.jsonl` JSONL 기록
+
+**v0.2까지 작동하지 않는 것 / Not wired in v0.1.x**
+- **Drafting compound (가장 자주 오해되는 항목)**: `assets/run_round.py:204` `build_draft()`는 한국어 고정 템플릿만 사용. `principles.md` / 매칭 패턴 / 사례를 본문 생성에 주입하지 않음. → **round 1과 round 100의 본문이 동일.** "100번 쓰면 우리 팀 톤"은 v0.2 작업.
+- **`edit_ratio` 측정**: `assets/run_round.py:468`에서 draft와 approved를 동일 문자열로 기록 → 구조적으로 항상 0.00. metrics에서 `edit%`은 placeholder.
+- **Persona tone**: `templates/personas/<persona>.md`가 init 시 `principles.md`로 복사되지만 드래프터가 읽지 않음 → 현 시점 장식적.
+- **`bootstrap apply` 명령**: ingest 4개 소스(`ingest/{gmail,web,notion,channeltalk}.py`)는 `bootstrap_pending.md`에 후보만 누적. 승인 후 patterns/로 이동시키는 CLI 명령 미구현.
+- **Ingest 본문 추출**: `ingest/gmail.py:90` / `ingest/notion.py:56`에 `Stub:` 주석 — subject만 가져오고 body 파싱 미구현.
+
+**오해 방지**: README hero / SKILL frontmatter의 "compound" 표현은 위 분류 정확도 compound에만 해당하고, drafting body의 compound는 v0.2 마일스톤입니다.
+
 ## 2. 본 스킬을 쓰지 않는 경우 / When NOT to invoke
 
 - Intercom/Front/Help Scout 등 본격 SaaS가 이미 깔린 환경 (그쪽이 멀티유저·SLA 관리·워크플로우 자동화에 더 우수)

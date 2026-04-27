@@ -28,6 +28,30 @@
 
 ---
 
+## Status & Roadmap (v0.1.x → v0.2)
+
+명확하게 작동하는 것과 아직 안 된 것을 분리합니다. CHANGELOG.md와 [`PLAN.md`](PLAN.md)에 더 자세한 항목이 있습니다.
+
+| Capability | v0.1.x (now) | v0.2 (planned) | Code pointer |
+|---|---|---|---|
+| Gmail fetch via gws | ✅ works | — | `assets/run_round.py` (fetch step) |
+| Substring + LLM 분류기 | ✅ works | — | `classifier/` |
+| Pattern store accumulation → 분류 정확도 round-over-round 향상 | ✅ works (genuine compound on classification) | — | `assets/reference_store.py` |
+| 2-tier 승인 게이트 (Tier-A/B) | ✅ works | — | `assets/run_round.py` (approval gate) |
+| `gws_drafts` 백엔드 (Gmail draft 생성) | ✅ works | — | `assets/sender.py` |
+| `metrics.jsonl` 기록 | ✅ writes file | — | `metrics/logger.py` |
+| **Reply body uses reference / persona principles** | ❌ **template-only** — `build_draft()`는 한국어 고정 템플릿. principles.md / 매칭 패턴이 본문 생성에 주입되지 않음. | ✅ wire reference + persona into draft prompt | `assets/run_round.py:204` (`build_draft`) |
+| **`edit_ratio` (사용자 수정량)** | ❌ **항상 0.00** — draft와 approved가 동일 문자열로 기록됨 (capture path 없음) | ✅ approval gate에서 user edit 캡처 | `assets/run_round.py:468` |
+| **`bootstrap apply` 명령** | ❌ **수동 복사** — ingest는 `bootstrap_pending.md`에 후보만 누적. 승인 후 patterns/로 옮기는 CLI 명령 없음. | ✅ `bootstrap apply --inbox <name>` | `ingest/` (gmail/web/notion/channeltalk), `bin/snowball-email` |
+| **Persona tone in drafter prompt** | ⚠️ **장식적 (decorative)** — `principles.md`에는 시드되지만 드래프터가 읽지 않음 | ✅ same as drafts row above | `templates/personas/` → `reference/principles.md` |
+| Gmail/Notion ingest body extraction | ⚠️ **subject only** — `ingest/gmail.py:90`, `ingest/notion.py:56`에 `Stub:` 주석. 본문 파싱 미구현. | ✅ full body parsing | `ingest/gmail.py`, `ingest/notion.py` |
+
+> **요약**: classification에서 발생하는 compound는 진짜로 동작합니다 (UNKNOWN 비율이 round-over-round 감소). **Drafting 단계의 compound — "100번 쓰면 우리 팀 톤" — 은 v0.2 작업이며 v0.1.x에선 템플릿 고정**입니다. metrics에 찍히는 의미 있는 신호는 `unk` / `new` / `A` / `B` 4개이고 `edit%`은 v0.2까지 placeholder입니다.
+
+> **Summary (EN)**: classification compounding is real — UNKNOWN rate drops as the pattern store grows. **Drafting compounding ("sounds like our team after 100 rounds") is v0.2 work and not wired in v0.1.x — drafts are template-fixed.** Useful metric signals today: `unk`, `new`, `A`, `B`. `edit%` stays a placeholder until v0.2.
+
+---
+
 ## 한국어
 
 ### 핵심 가치
