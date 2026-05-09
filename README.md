@@ -88,6 +88,24 @@ bin/snowball-email --help
 
 Claude Code에서는 자동으로 `/snowball-email`로 인식됩니다.
 
+**대안: pip 설치 (Alternative: pip install)**
+
+```bash
+# 로컬 clone에서 editable 설치
+git clone https://github.com/challengekim/snowball-email.git ~/snowball-email
+pip install -e ~/snowball-email
+
+# 설치 확인 (bin/ 없이 바로 호출 가능)
+snowball-email --help
+
+# 미래: PyPI 공개 후
+# pip install snowball-email
+```
+
+주의: `pip install`은 CLI만 PATH에 추가합니다. `templates/`, `assets/`, `inboxes/`, `config/schema.yaml` 등의 데이터 파일은 여전히 `$SNOWBALL_EMAIL_HOME`에서 읽힙니다.
+- 기본값: `~/.claude/skills/snowball-email` (skill-clone 경로와 동일)
+- 커스텀 경로: `export SNOWBALL_EMAIL_HOME=/path/to/snowball-email-clone`
+
 ### 0.5 부트스트랩 (초기 학습 — cold-start → warm-start)
 
 처음부터 양질의 초안을 받으려면 **첫 사용 전에 회사 자산을 reference에 시드**하세요. 4개 소스를 지원하고, 모든 소스는 `bootstrap_pending.md`에 후보를 쌓아두면 사용자가 한 줄씩 검토·승인 후에야 reference에 반영됩니다 (자동 승인 없음).
@@ -263,6 +281,22 @@ bin/snowball-email --help
 **No extra dependencies** — pure Python stdlib. No `pip install` needed.
 
 Claude Code auto-discovers it as `/snowball-email`.
+
+**Alternative: pip install**
+
+```bash
+# Editable install from a local clone
+git clone https://github.com/challengekim/snowball-email.git ~/snowball-email
+pip install -e ~/snowball-email
+
+# Verify — no bin/ prefix needed
+snowball-email --help
+
+# Future: once published to PyPI
+# pip install snowball-email
+```
+
+Note: `pip install` only adds the CLI to your PATH. Data files (`templates/`, `assets/`, `inboxes/`, `config/schema.yaml`) are still read from `$SNOWBALL_EMAIL_HOME` (default: `~/.claude/skills/snowball-email`). Either point `SNOWBALL_EMAIL_HOME` at your clone, or keep the legacy skill-clone path alongside — the pip CLI reads from it by default.
 
 ### 0.5 Bootstrap (cold-start → warm-start)
 

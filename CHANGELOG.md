@@ -10,6 +10,18 @@ wired and is tracked as v0.2 work in [`PLAN.md`](PLAN.md).
 
 ---
 
+## v0.1.0-rc — 2026-05-09 (unreleased)
+
+### Added
+- `pyproject.toml` with setuptools + `snowball-email` console script.
+- `snowball_email/` package containing `cli.py` (relocated from `bin/snowball-email`).
+- `bin/snowball-email` is now a thin shim that imports `snowball_email.cli:main` — preserves the legacy `~/.claude/skills/snowball-email/bin/snowball-email` invocation path.
+
+### Changed
+- Nothing user-visible. `bin/snowball-email <subcommand>` and `snowball-email <subcommand>` (after `pip install -e .`) behave identically.
+
+---
+
 ## [Unreleased] — v0.2 milestone (planned)
 
 > Theme: turn the four "decorative" pieces in v0.1.x into real ones, in priority order.
