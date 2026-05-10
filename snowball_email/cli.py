@@ -94,11 +94,23 @@ def cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ensure_home_data() -> None:
+    """Verify HOME has the skill data structure. Called by commands that need it."""
+    if not (HOME / "assets").is_dir():
+        raise SystemExit(
+            f"[snowball-email] HOME 데이터를 찾을 수 없습니다: {HOME}\n"
+            f"  필요한 디렉토리: assets/, templates/, inboxes/, config/\n"
+            f"  해결: git clone https://github.com/challengekim/snowball-email ~/.claude/skills/snowball-email\n"
+            f"        또는 SNOWBALL_EMAIL_HOME=/path/to/repo/clone 으로 설정\n"
+        )
+
+
 def _seed_persona(inbox: str, persona: str) -> None:
     """Copy persona principles + (cs|bd) pattern templates into the inbox reference dir.
 
     Idempotent: existing files are not overwritten.
     """
+    _ensure_home_data()
     sys.path.insert(0, str(HOME / "assets"))
     try:
         import reference_store as rs
@@ -272,6 +284,7 @@ def cmd_metrics(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    _ensure_home_data()
     sys.path.insert(0, str(HOME / "assets"))
     import run_round
     return run_round.run(args.inbox, dry_run=args.dry_run, fixture=args.fixture,

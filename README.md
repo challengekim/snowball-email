@@ -102,9 +102,12 @@ snowball-email --help
 # pip install snowball-email
 ```
 
-주의: `pip install`은 CLI만 PATH에 추가합니다. `templates/`, `assets/`, `inboxes/`, `config/schema.yaml` 등의 데이터 파일은 여전히 `$SNOWBALL_EMAIL_HOME`에서 읽힙니다.
-- 기본값: `~/.claude/skills/snowball-email` (skill-clone 경로와 동일)
-- 커스텀 경로: `export SNOWBALL_EMAIL_HOME=/path/to/snowball-email-clone`
+> **현재 v0.1.0-rc 한계**: `pip install`은 `snowball-email` CLI 바이너리만 PATH에 등록합니다. 실제 동작에는 skill 데이터(`assets/`, `templates/`, `inboxes/`, `config/`)가 필요한데, 이는 wheel에 포함되지 않습니다. 두 가지 시나리오 중 하나를 선택하세요:
+>
+> - **권장 (skill clone)**: `git clone https://github.com/challengekim/snowball-email ~/.claude/skills/snowball-email` 후 `bin/snowball-email` 직접 실행. (또는 PyPI CLI를 같이 쓰려면 `pip install -e ~/.claude/skills/snowball-email`)
+> - **개발자용**: 어디든 clone 후 `pip install -e .`. 그 후 `export SNOWBALL_EMAIL_HOME=$(pwd)`로 데이터 위치 명시.
+>
+> 완전한 self-contained PyPI 패키지(skill 데이터 wheel 번들)는 v0.2 로드맵 항목입니다.
 
 ### 0.5 부트스트랩 (초기 학습 — cold-start → warm-start)
 
@@ -296,7 +299,12 @@ snowball-email --help
 # pip install snowball-email
 ```
 
-Note: `pip install` only adds the CLI to your PATH. Data files (`templates/`, `assets/`, `inboxes/`, `config/schema.yaml`) are still read from `$SNOWBALL_EMAIL_HOME` (default: `~/.claude/skills/snowball-email`). Either point `SNOWBALL_EMAIL_HOME` at your clone, or keep the legacy skill-clone path alongside — the pip CLI reads from it by default.
+> **Current v0.1.0-rc limitation**: `pip install` only registers the `snowball-email` CLI binary in your PATH. Actual operation requires skill data (`assets/`, `templates/`, `inboxes/`, `config/`) which is not included in the wheel. Choose one of two scenarios:
+>
+> - **Recommended (skill clone)**: `git clone https://github.com/challengekim/snowball-email ~/.claude/skills/snowball-email` then invoke `bin/snowball-email` directly. (To also use the pip CLI: `pip install -e ~/.claude/skills/snowball-email`)
+> - **Developer setup**: Clone anywhere, then `pip install -e .`. Afterwards set `export SNOWBALL_EMAIL_HOME=$(pwd)` to point at the data.
+>
+> A fully self-contained PyPI package (skill data bundled in the wheel) is a v0.2 roadmap item.
 
 ### 0.5 Bootstrap (cold-start → warm-start)
 

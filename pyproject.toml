@@ -12,7 +12,7 @@ requires-python = ">=3.9"
 authors = [{ name = "challengekim" }]
 keywords = ["gmail", "claude-code", "skill", "email", "automation", "gws-cli"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -31,4 +31,4 @@ Homepage = "https://github.com/challengekim/snowball-email"
 Issues = "https://github.com/challengekim/snowball-email/issues"
 
 [tool.setuptools.packages.find]
-include = ["snowball_email*"]
+include = ["snowball_email"]

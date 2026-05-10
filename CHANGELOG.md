@@ -18,7 +18,15 @@ wired and is tracked as v0.2 work in [`PLAN.md`](PLAN.md).
 - `bin/snowball-email` is now a thin shim that imports `snowball_email.cli:main` — preserves the legacy `~/.claude/skills/snowball-email/bin/snowball-email` invocation path.
 
 ### Changed
-- Nothing user-visible. `bin/snowball-email <subcommand>` and `snowball-email <subcommand>` (after `pip install -e .`) behave identically.
+- Nothing user-visible in runtime behaviour. `bin/snowball-email` and the pip
+  console script both dispatch through `snowball_email.cli:main`.
+
+### Known limitations (v0.1.0-rc)
+- `pip install` only ships the `snowball_email` package + console script. Skill data
+  (`assets/`, `templates/`, `inboxes/`, `config/`) still lives in the repo and must be
+  reachable via either a coexisting skill-clone at `~/.claude/skills/snowball-email/`
+  or `SNOWBALL_EMAIL_HOME` env var pointing at a repo checkout. Bundling skill data
+  into the wheel is a v0.2 task.
 
 ---
 
