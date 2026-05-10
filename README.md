@@ -88,6 +88,27 @@ bin/snowball-email --help
 
 Claude Code에서는 자동으로 `/snowball-email`로 인식됩니다.
 
+**대안: pip 설치 (Alternative: pip install)**
+
+```bash
+# 로컬 clone에서 editable 설치
+git clone https://github.com/challengekim/snowball-email.git ~/snowball-email
+pip install -e ~/snowball-email
+
+# 설치 확인 (bin/ 없이 바로 호출 가능)
+snowball-email --help
+
+# 미래: PyPI 공개 후
+# pip install snowball-email
+```
+
+> **현재 v0.1.0-rc 한계**: `pip install`은 `snowball-email` CLI 바이너리만 PATH에 등록합니다. 실제 동작에는 skill 데이터(`assets/`, `templates/`, `inboxes/`, `config/`)가 필요한데, 이는 wheel에 포함되지 않습니다. 두 가지 시나리오 중 하나를 선택하세요:
+>
+> - **권장 (skill clone)**: `git clone https://github.com/challengekim/snowball-email ~/.claude/skills/snowball-email` 후 `bin/snowball-email` 직접 실행. (또는 PyPI CLI를 같이 쓰려면 `pip install -e ~/.claude/skills/snowball-email`)
+> - **개발자용**: 어디든 clone 후 `pip install -e .`. 그 후 `export SNOWBALL_EMAIL_HOME=$(pwd)`로 데이터 위치 명시.
+>
+> 완전한 self-contained PyPI 패키지(skill 데이터 wheel 번들)는 v0.2 로드맵 항목입니다.
+
 ### 0.5 부트스트랩 (초기 학습 — cold-start → warm-start)
 
 처음부터 양질의 초안을 받으려면 **첫 사용 전에 회사 자산을 reference에 시드**하세요. 4개 소스를 지원하고, 모든 소스는 `bootstrap_pending.md`에 후보를 쌓아두면 사용자가 한 줄씩 검토·승인 후에야 reference에 반영됩니다 (자동 승인 없음).
@@ -263,6 +284,27 @@ bin/snowball-email --help
 **No extra dependencies** — pure Python stdlib. No `pip install` needed.
 
 Claude Code auto-discovers it as `/snowball-email`.
+
+**Alternative: pip install**
+
+```bash
+# Editable install from a local clone
+git clone https://github.com/challengekim/snowball-email.git ~/snowball-email
+pip install -e ~/snowball-email
+
+# Verify — no bin/ prefix needed
+snowball-email --help
+
+# Future: once published to PyPI
+# pip install snowball-email
+```
+
+> **Current v0.1.0-rc limitation**: `pip install` only registers the `snowball-email` CLI binary in your PATH. Actual operation requires skill data (`assets/`, `templates/`, `inboxes/`, `config/`) which is not included in the wheel. Choose one of two scenarios:
+>
+> - **Recommended (skill clone)**: `git clone https://github.com/challengekim/snowball-email ~/.claude/skills/snowball-email` then invoke `bin/snowball-email` directly. (To also use the pip CLI: `pip install -e ~/.claude/skills/snowball-email`)
+> - **Developer setup**: Clone anywhere, then `pip install -e .`. Afterwards set `export SNOWBALL_EMAIL_HOME=$(pwd)` to point at the data.
+>
+> A fully self-contained PyPI package (skill data bundled in the wheel) is a v0.2 roadmap item.
 
 ### 0.5 Bootstrap (cold-start → warm-start)
 
